@@ -36,6 +36,10 @@ jobs:
           code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
           echo "Number of additions in PR: $code_changes"
           echo "Code Changes: $code_changes"
+          
+          code_changes_int=$(echo "$code_changes" | awk '{print int($1)}')  # Convert to integer
+          echo "Code Changes (Integer): $code_changes_int"
+          
           # Get PR details using GraphQL
           echo "Querying GitHub GraphQL API for PR details..."
           RESPONSE=$(curl -X POST \
@@ -47,6 +51,10 @@ jobs:
           # Extract reviews and filter out CHANGES_REQUESTED state
           changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
           echo "Number of changes requested: $changes_requested_reviews"
+          
+          changes_requested_int=$(echo "$changes_requested_reviews" | awk '{print int($1)}')  # Convert to integer
+          echo "Code Changes (Integer): $changes_requested_int"
+          
       - name: Update JIRA Custom Fields
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
         run: |
@@ -59,7 +67,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'${{ steps.get-details.outputs.code_changes }}'"
+                  "customfield_10050": "'${{ steps.get-details.outputs.code_changes_int }}'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${{ steps.get-details.outputs.issueKey }}"
@@ -71,7 +79,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_reviews }}'"
+                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_int }}'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${{ steps.get-details.outputs.issueKey }}"
