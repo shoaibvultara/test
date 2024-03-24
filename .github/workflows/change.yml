@@ -16,7 +16,7 @@ jobs:
         id: list-files
         run: |
          issueKey="${{ github.event.pull_request.head.ref }}"
-          PR_NUMBER="${{ github.event.number }}"
+          PR_NUMBER=$(curl -s "https://api.github.com/repos/${{ github.repository }}/pulls" | jq ".[] | select(.head.ref == \"$issueKey\") | .number")
           echo "Extracted PR number: $PR_NUMBER"
           
           if [ -z "$PR_NUMBER" ]; then
