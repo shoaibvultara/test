@@ -63,7 +63,7 @@ jobs:
           curl -v -X PUT \
             -H "Content-Type: application/json" \
             -u "$jiraUsername:$jiraToken" \
-            -d '{"fields": {"customfield_10050": "'${{ steps.get-details.outputs.code_changes'"}}' \
+            -d "{\"fields\": {\"customfield_10050\": \"$code_addition\"}}" \
             "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
             echo "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
           
@@ -71,7 +71,7 @@ jobs:
           curl -v -X PUT \
             -H "Content-Type: application/json" \
             -u "$jiraUsername:$jiraToken" \
-            -d '{"fields": {"customfield_10051": "$change_requests"}}' \
+            -d "{\"fields\": {\"customfield_10051\": \"$changes_requested_reviews\"}}" \
             "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
 
             #-d '{"fields": {"customfield_10051": "'"${{ steps.get-details.outputs.changes_requested_reviews }}"'"}}' \
