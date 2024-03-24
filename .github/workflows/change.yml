@@ -1,3 +1,4 @@
+
 name: Code Changes and Change Requests
 
 on:
@@ -13,67 +14,65 @@ jobs:
         uses: actions/checkout@v3
         
       - name: Count Changes
-        id: list-files
+        id: get-details
         run: |
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          PR_NUMBER=$(curl -s -X GET \
-                        -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" \
-                        https://api.github.com/repos/${{ github.repository }}/pulls | jq ".[] | select(.head.ref == \"$issueKey\") | .number")
+         issueKey="${{ github.event.pull_request.head.ref }}"
+          PR_NUMBER=$(curl -s "https://api.github.com/repos/${{ github.repository }}/pulls" | jq ".[] | select(.head.ref == \"$issueKey\") | .number")
           echo "Extracted PR number: $PR_NUMBER"
           
           if [ -z "$PR_NUMBER" ]; then
             echo "PR_NUMBER not found. Skipping the remaining jobs."
             exit 0
           fi
-          
-          diff_url="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/"
-          
-          # Handle potential null response for reviews
-          reviews_response=$(curl -s "${diff_url}reviews")
-          if [ "$reviews_response" = "null" ]; then
-            change_requests=0
-          else
-            change_requests=$(echo "$reviews_response" | jq -n '[inputs] | map(select(.state == "CHANGES_REQUESTED")) | length')
-          fi
-          echo "Change Requests: $change_requests"
-          
-          # Handle potential null response for files
-          files_response=$(curl -s "${diff_url}files")
-          if [ "$files_response" = "null" ]; then
-            code_changes=0
-          else
-            code_changes=$(echo "$files_response" | jq -n '[inputs] | map(.additions) | add')
-          fi
+          # Get PR Additions using GraphQL
+          echo "Querying GitHub GraphQL API for PR details..."
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { additions changedFiles } } }"}' \
+            https://api.github.com/graphql)
+          echo "API Response:"
+          echo "$RESPONSE"
+          # Extract additions
+          code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
+          echo "Number of additions in PR: $code_changes"
           echo "Code Changes: $code_changes"
-          echo "::set-output name=change_requests::$change_requests"
-          echo "::set-output name=code_changes::$code_changes"
-      
+          # Get PR details using GraphQL
+          echo "Querying GitHub GraphQL API for PR details..."
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { reviews(first:100) { nodes { state } } } } }"}' \
+            https://api.github.com/graphql)
+          echo "API Response:"
+          echo "$RESPONSE"
+          # Extract reviews and filter out CHANGES_REQUESTED state
+          changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
+          echo "Number of changes requested: $changes_requested_reviews"
       - name: Update JIRA Custom Fields
-        if: steps.list-files.outputs.change_requests > 0 || steps.list-files.outputs.code_changes > 0
+        #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
         run: |
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          
-          if [ -n "${{ steps.list-files.outputs.change_requests }}" ]; then
+          issueKey="${{ github.event.client_payload.issueKey }}"
+    
+          if [ "${{ steps.get-details.outputs.code_changes }}" -gt 0 ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_1051": '${{ steps.list-files.outputs.change_requests }}'
+                  "customfield_10050": "'${{ steps.get-details.outputs.code_changes }}'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
           fi
-          
-          if [ -n "${{ steps.list-files.outputs.code_changes }}" ]; then
+    
+          if [ "${{ steps.get-details.outputs.changes_requested_reviews }}" -gt 0 ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_1050": '${{ steps.list-files.outputs.code_changes }}'
+                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_reviews }}'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
