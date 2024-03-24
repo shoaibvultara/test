@@ -49,7 +49,7 @@ jobs:
           # Extract reviews and filter out CHANGES_REQUESTED state
           changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
           echo "Number of changes requested: $changes_requested_reviews"
-          echo "change_requested=$changes_requested_reviews" >> $GITHUB_ENV
+          echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
           
           
       - name: Update JIRA Custom Fields
