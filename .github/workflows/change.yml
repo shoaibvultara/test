@@ -15,6 +15,7 @@ jobs:
       - name: Count Changes
         id: list-files
         run: |
+         issueKey="${{ github.event.pull_request.head.ref }}"
           PR_NUMBER="${{ github.event.number }}"
           echo "Extracted PR number: $PR_NUMBER"
           
