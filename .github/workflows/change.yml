@@ -33,7 +33,11 @@ jobs:
           echo "API Response:"
           echo "$RESPONSE"
 
-          PR_ADDITIONS=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
+          code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
+
+          echo "Number of additions in PR: $code_changes"
+
+          echo "Code Changes: $code_changes"
           
       - name: Update JIRA Custom Fields
         run: |
