@@ -57,7 +57,6 @@ jobs:
           
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
       - name: Update JIRA Custom Fields
-        if: steps.get-details.outputs.code_changes_int > 0 || steps.get-details.outputs.changes_requested_int > 0
         run: |
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
