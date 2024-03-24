@@ -57,7 +57,7 @@ jobs:
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.client_payload.issueKey }}"
-          
+    
           if [ "${{ steps.get-details.outputs.code_changes }}" -gt 0 ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
@@ -69,14 +69,14 @@ jobs:
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
           fi
-          
+    
           if [ "${{ steps.get-details.outputs.changes_requested_reviews }}" -gt 0 ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": "'${{ steps.list-files.outputs.changes_requested_reviews }}'"
+                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_reviews }}'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
