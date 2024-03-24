@@ -56,24 +56,33 @@ jobs:
           echo "Change Requested (Integer): $changes_requested_int"
           
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
-      - name: Update Jira Custom Fields
+      - name: Update JIRA Custom Fields
+        if: steps.get-details.outputs.code_changes_int > 0 || steps.get-details.outputs.changes_requested_int > 0
         run: |
-          # Use Jira API to update custom fields
-          
-          # For code addition custom field
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
-
+          issueKey="${{ github.event.pull_request.head.ref }}"
+          
+          if [ "${{ steps.get-details.outputs.code_changes_int }}" -gt 0 ]; then
             curl -X PUT \
-            -H "Content-Type: application/json" \
-            -u "$jiraUsername:$jiraToken" \
-            -d '{
-              "fields": {
-                "customfield_10050": "'${{ steps.get-details.outputs.code_changes_int }}'"
-              }
-            }' \
-            "https://gittest.atlassian.net/rest/api/3/issue/${{ github.event.pull_request.head.ref }}"
-
-              
-          # For change requested custom field
-          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10051\": $changes_requested_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/3/issue/${{ github.event.pull_request.head.ref }}
+              -H "Content-Type: application/json" \
+              -u "$jiraUsername:$jiraToken" \
+              -d '{
+                "fields": {
+                  "customfield_10050": "'${{ steps.get-details.outputs.code_changes_int }}'"
+                }
+              }' \
+              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+          fi
+          
+          if [ "${{ steps.list-files.outputs.change_requests }}" -gt 0 ]; then
+            curl -X PUT \
+              -H "Content-Type: application/json" \
+              -u "$jiraUsername:$jiraToken" \
+              -d '{
+                "fields": {
+                  "customfield_10051": "'${{ steps.list-files.outputs.changes_requested_int }}'"
+                }
+              }' \
+              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+          fi
