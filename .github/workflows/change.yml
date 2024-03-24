@@ -36,7 +36,7 @@ jobs:
           code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
           echo "Number of additions in PR: $code_changes"
           echo "Code Changes: $code_changes"
-          echo "::set-env name=CODE_CHANGES::$code_changes"
+          echo "code_addition=$code_changes" >> $GITHUB_ENV
           
           # Get PR details using GraphQL
           echo "Querying GitHub GraphQL API for PR details..."
@@ -71,7 +71,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'"$code_changes"'"
+                  "customfield_10050": "'"$code_addition"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
