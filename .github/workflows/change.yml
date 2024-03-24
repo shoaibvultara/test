@@ -42,6 +42,12 @@ jobs:
 
           echo "Code Changes: $code_changes"
           echo "Change Requests: $change_requests"
+
+          diff_url="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews"
+          echo "$diff_url"  # Debugging line
+          change_requests=$(curl -s -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" "$diff_url" | jq 'map(select(.state == "CHANGES_REQUESTED")) | length')
+          echo "::set-output name=change_requests::$change_requests"
+          echo "Change Requests: $change_requests"
           
       - name: Update JIRA Custom Fields
         run: |
