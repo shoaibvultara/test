@@ -56,12 +56,14 @@ jobs:
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
+          code_addition="${{ steps.get-details.outputs.code_changes }}"
+          change_requests="${{ steps.get-details.outputs.changes_requested_reviews }}"
           
           # Update customfield_10050
           curl -v -X PUT \
             -H "Content-Type: application/json" \
             -u "$jiraUsername:$jiraToken" \
-            -d '{"fields": {"customfield_10050": "'"${{ steps.get-details.outputs.code_changes }}"'"}}' \
+            -d '{"fields": {"customfield_10050": "$code_addition"}}' \
             "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
             echo "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
           
@@ -69,7 +71,7 @@ jobs:
           curl -v -X PUT \
             -H "Content-Type: application/json" \
             -u "$jiraUsername:$jiraToken" \
-            -d '{"fields": {"customfield_10051": "bc"}}' \
+            -d '{"fields": {"customfield_10051": "$change_requests"}}' \
             "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
 
             #-d '{"fields": {"customfield_10051": "'"${{ steps.get-details.outputs.changes_requested_reviews }}"'"}}' \
