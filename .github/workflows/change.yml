@@ -23,32 +23,34 @@ jobs:
             echo "PR_NUMBER not found. Skipping the remaining jobs."
             exit 0
           fi
-          # Get PR details using GraphQL
+          # Get PR Additions using GraphQL
           echo "Querying GitHub GraphQL API for PR details..."
           RESPONSE=$(curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { additions changedFiles } } }"}' \
             https://api.github.com/graphql)
+          echo "API Response:"
+          echo "$RESPONSE"
+          # Extract additions
+          code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
+          echo "Number of additions in PR: $code_changes"
+          echo "Code Changes: $code_changes"
+
+          # Get PR details using GraphQL
+          echo "Querying GitHub GraphQL API for PR details..."
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { reviews(first:100) { nodes { state } } } } }"}' \
+            https://api.github.com/graphql)
 
           echo "API Response:"
           echo "$RESPONSE"
 
-          # Extract additions and changedFiles
-          code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
-          change_requests=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.changedFiles')
+          # Extract reviews and filter out CHANGES_REQUESTED state
+          changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
 
-          echo "Number of additions in PR: $code_changes"
-          echo "Number of changed files in PR: $change_requests"
+          echo "Number of changes requested: $changes_requested_reviews"
 
-          echo "Code Changes: $code_changes"
-          echo "Change Requests: $change_requests"
-
-          diff_url="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews"
-          echo "$diff_url"  # Debugging line
-          change_requests=$(curl -s -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" "$diff_url" | jq 'map(select(.state == "CHANGES_REQUESTED")) | length')
-          echo "::set-output name=change_requests::$change_requests"
-          echo "Change Requests: $change_requests"
-          
       - name: Update JIRA Custom Fields
         run: |
           jiraUsername="shoaib40ce@gmail.com"
