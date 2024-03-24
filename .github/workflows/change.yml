@@ -15,19 +15,14 @@ jobs:
       - name: Count Changes
         id: list-files
         run: |
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          PR_NUMBER=$(curl -s -X GET \
-                        -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" \
-                        https://api.github.com/repos/${{ github.repository }}/pulls | jq ".[] | select(.head.ref == \"$issueKey\") | .number")
+          PR_NUMBER="${{ github.event.number }}"
           echo "Extracted PR number: $PR_NUMBER"
           
           if [ -z "$PR_NUMBER" ]; then
             echo "PR_NUMBER not found. Skipping the remaining jobs."
             exit 0
           fi
-          
-        
-      
+                
       - name: Update JIRA Custom Fields
         run: |
           jiraUsername="shoaib40ce@gmail.com"
