@@ -64,9 +64,17 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'$codeChanges'",
+                  "customfield_10050": "'$codeChanges'"
+                }
+              }' \
+              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+
+                    curl -X PUT \
+              -H "Content-Type: application/json" \
+              -u "$jiraUsername:$jiraToken" \
+              -d '{
+                "fields": {
                   "customfield_10051": "'$codeChanges'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-          
