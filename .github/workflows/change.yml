@@ -24,13 +24,16 @@ jobs:
             exit 0
           fi
           # Get PR details using GraphQL
-          PR_ADDITIONS=$(curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.TOKEN_GITHUB }}" \
-            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: $PR_NUMBER) { additions } } }"}' \
-            https://api.github.com/graphql | jq '.data.repository.pullRequest.additions')
-          echo "Number of additions in PR: $PR_ADDITIONS"
+          echo "Querying GitHub GraphQL API for PR details..."
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { additions } } }"}' \
+            https://api.github.com/graphql)
 
-          
+          echo "API Response:"
+          echo "$RESPONSE"
+
+          PR_ADDITIONS=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
           
       - name: Update JIRA Custom Fields
         run: |
