@@ -57,13 +57,14 @@ jobs:
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_addition="${{ steps.get-details.outputs.code_changes }}"
+          echo $code_addition
           change_requests="${{ steps.get-details.outputs.changes_requested_reviews }}"
           
           # Update customfield_10050
           curl -v -X PUT \
             -H "Content-Type: application/json" \
             -u "$jiraUsername:$jiraToken" \
-            -d "{\"fields\": {\"customfield_10050\": \"$code_addition\"}}" \
+            -d "{\"fields\": {\"customfield_10050\":"The following selectors are not there:'"$code_addition"'"}}" \
             "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
             echo "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
           
