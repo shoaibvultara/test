@@ -23,7 +23,18 @@ jobs:
             echo "PR_NUMBER not found. Skipping the remaining jobs."
             exit 0
           fi
-                
+          
+          diff_url="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files"
+          echo "$diff_url"  # Debugging line
+          code_changes=$(curl -s -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" "$diff_url" | jq '[.[] | .additions] | add')
+          echo "::set-output name=code_changes::$code_changes"
+          echo "Code Changes: $code_changes"
+          diff_url="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews"
+          echo "$diff_url"  # Debugging line
+          change_requests=$(curl -s -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" "$diff_url" | jq 'map(select(.state == "CHANGES_REQUESTED")) | length')
+          echo "::set-output name=change_requests::$change_requests"
+          echo "Change Requests: $change_requests"
+          
       - name: Update JIRA Custom Fields
         run: |
           jiraUsername="shoaib40ce@gmail.com"
