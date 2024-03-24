@@ -49,6 +49,7 @@ jobs:
           # Extract reviews and filter out CHANGES_REQUESTED state
           changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
           echo "Number of changes requested: $changes_requested_reviews"
+          echo "change_requested=$changes_requested_reviews" >> $GITHUB_ENV
           
           
       - name: Update JIRA Custom Fields
@@ -57,13 +58,9 @@ jobs:
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
-          code_changes="${{ env.CODE_CHANGES }}"
-          change_requests="${{ steps.get-details.outputs.changes_requested_reviews }}"
+          code_changes="${{ env.code_changes }}"
+          change_requests="${{ env.changes_requested_reviews }}"
 
-          echo "Jira Username: $jiraUsername"
-          echo "Issue Key: $issueKey"
-          echo "Code Addition: $code_changes"
-          echo "Change Requests: $change_requests"
           
           # Update customfield_10050
           curl -X PUT \
@@ -72,6 +69,17 @@ jobs:
               -d '{
                 "fields": {
                   "customfield_10050": "'"$code_addition"'"
+                }
+              }' \
+              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+
+          # Update customfield_10050
+          curl -X PUT \
+              -H "Content-Type: application/json" \
+              -u "$jiraUsername:$jiraToken" \
+              -d '{
+                "fields": {
+                  "customfield_10051": "'"$change_requests"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
