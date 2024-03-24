@@ -53,34 +53,15 @@ jobs:
           echo "Number of changes requested: $changes_requested_reviews"
           
           changes_requested_int=$(echo "$changes_requested_reviews" | awk '{print int($1)}')  # Convert to integer
-          echo "Code Changes (Integer): $changes_requested_int"
+          echo "Change Requested (Integer): $changes_requested_int"
           
-      - name: Update JIRA Custom Fields
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
+      - name: Update Jira Custom Fields
         run: |
-          jiraUsername="shoaib40ce@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
-    
-          if [ "${{ steps.get-details.outputs.code_changes }}" -gt 0 ]; then
-            curl -X PUT \
-              -H "Content-Type: application/json" \
-              -u "$jiraUsername:$jiraToken" \
-              -d '{
-                "fields": {
-                  "customfield_10050": "'${{ steps.get-details.outputs.code_changes_int }}'"
-                }
-              }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${{ steps.get-details.outputs.issueKey }}"
-          fi
-    
-          if [ "${{ steps.get-details.outputs.changes_requested_reviews }}" -gt 0 ]; then
-            curl -X PUT \
-              -H "Content-Type: application/json" \
-              -u "$jiraUsername:$jiraToken" \
-              -d '{
-                "fields": {
-                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_int }}'"
-                }
-              }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${{ steps.get-details.outputs.issueKey }}"
-          fi
+          # Use Jira API to update custom fields
+          
+          # For code addition custom field
+          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10050\": $code_changes_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/2/issue/${{ github.event.pull_request.head.ref }}
+          
+          # For change requested custom field
+          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10051\": $changes_requested_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/2/issue/${{ github.event.pull_request.head.ref }}
