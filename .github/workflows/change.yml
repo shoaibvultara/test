@@ -1,5 +1,3 @@
-
-
 name: Code Changes and Change Requests
 
 on:
@@ -17,7 +15,7 @@ jobs:
       - name: Count Changes
         id: get-details
         run: |
-         issueKey="${{ github.event.pull_request.head.ref }}"
+          issueKey="${{ github.event.pull_request.head.ref }}"
           PR_NUMBER=$(curl -s "https://api.github.com/repos/${{ github.repository }}/pulls" | jq ".[] | select(.head.ref == \"$issueKey\") | .number")
           echo "Extracted PR number: $PR_NUMBER"
           
@@ -37,9 +35,7 @@ jobs:
           code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
           echo "Number of additions in PR: $code_changes"
           echo "Code Changes: $code_changes"
-          
-          code_changes_int=$(echo "$code_changes" | awk '{print int($1)}')  # Convert to integer
-          echo "Code Changes (Integer): $code_changes_int"
+
           
           # Get PR details using GraphQL
           echo "Querying GitHub GraphQL API for PR details..."
@@ -53,33 +49,24 @@ jobs:
           changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
           echo "Number of changes requested: $changes_requested_reviews"
           
-          changes_requested_int=$(echo "$changes_requested_reviews" | awk '{print int($1)}')  # Convert to integer
-          echo "Change Requested (Integer): $changes_requested_int"
           
-        #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
       - name: Update JIRA Custom Fields
+        #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
         run: |
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
           
-            curl -X PUT \
-              -H "Content-Type: application/json" \
-              -u "$jiraUsername:$jiraToken" \
-              -d '{
-                "fields": {
-                  "customfield_10050": "'${{ steps.get-details.outputs.code_changes_int }}'"
-                }
-              }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+          # Update customfield_10050
+          curl -X PUT \
+            -H "Content-Type: application/json" \
+            -u "$jiraUsername:$jiraToken" \
+            -d '{"fields": {"customfield_10050": "'"${{ steps.get-details.outputs.code_changes }}"'"}}' \
+            "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
           
-            curl -X PUT \
-              -H "Content-Type: application/json" \
-              -u "$jiraUsername:$jiraToken" \
-              -d '{
-                "fields": {
-                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_int }}'"
-                }
-              }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-    
+          # Update customfield_10051
+          curl -X PUT \
+            -H "Content-Type: application/json" \
+            -u "$jiraUsername:$jiraToken" \
+            -d '{"fields": {"customfield_10051": "'"${{ steps.get-details.outputs.changes_requested_reviews }}"'"}}' \
+            "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
