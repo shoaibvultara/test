@@ -36,6 +36,7 @@ jobs:
           code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
           echo "Number of additions in PR: $code_changes"
           echo "Code Changes: $code_changes"
+          echo "::set-env name=CODE_CHANGES::$code_changes"
           
           # Get PR details using GraphQL
           echo "Querying GitHub GraphQL API for PR details..."
@@ -56,12 +57,12 @@ jobs:
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
-          code_addition="${{ steps.get-details.outputs.code_changes }}"
+          code_changes="${{ env.CODE_CHANGES }}"
           change_requests="${{ steps.get-details.outputs.changes_requested_reviews }}"
 
           echo "Jira Username: $jiraUsername"
           echo "Issue Key: $issueKey"
-          echo "Code Addition: $code_addition"
+          echo "Code Addition: $code_changes"
           echo "Change Requests: $change_requests"
           
           # Update customfield_10050
@@ -70,7 +71,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'"$code_addition"'"
+                  "customfield_10050": "'"$code_changes"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
