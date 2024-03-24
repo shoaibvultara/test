@@ -62,7 +62,6 @@ jobs:
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
           
-          if [ "${{ steps.get-details.outputs.code_changes_int }}" -gt 0 ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
@@ -72,9 +71,7 @@ jobs:
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-          fi
           
-          if [ "${{ steps.list-files.outputs.change_requests }}" -gt 0 ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
@@ -84,4 +81,4 @@ jobs:
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-          fi
+    
