@@ -29,7 +29,6 @@ jobs:
         
       
       - name: Update JIRA Custom Fields
-        if: steps.list-files.outputs.change_requests > 0 || steps.list-files.outputs.code_changes > 0
         run: |
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
