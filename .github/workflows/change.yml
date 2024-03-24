@@ -81,7 +81,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": "'${{ steps.list-files.outputs.changes_requested_int }}'"
+                  "customfield_10051": "'${{ steps.get-details.outputs.changes_requested_int }}'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
