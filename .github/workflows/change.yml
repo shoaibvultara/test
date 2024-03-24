@@ -59,7 +59,7 @@ jobs:
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_changes="${{ env.code_changes }}"
-          change_requests="${{ env.changes_requested_reviews }}"
+          change_requests_reviews="${{ env.changes_requested_reviews }}"
 
           
           # Update customfield_10050
@@ -79,7 +79,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": "'"$change_requests"'"
+                  "customfield_10051": "'"$change_requests_reviews"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
