@@ -61,8 +61,8 @@ jobs:
           # Use Jira API to update custom fields
           
           # For code addition custom field
-          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10050\": $code_changes_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/2/issue/${{ github.event.pull_request.head.ref }}
+          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10050\": $code_changes_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/3/issue/${{ github.event.pull_request.head.ref }}
           
           # For change requested custom field
-          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10051\": $changes_requested_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/2/issue/${{ github.event.pull_request.head.ref }}
+          curl -D- -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} -X PUT --data "{ \"fields\": { \"customfield_10051\": $changes_requested_int }}" -H "Content-Type: application/json" gittest.atlassian.net/rest/api/3/issue/${{ github.event.pull_request.head.ref }}
 
