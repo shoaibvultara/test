@@ -58,6 +58,11 @@ jobs:
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_addition="${{ steps.get-details.outputs.code_changes }}"
           change_requests="${{ steps.get-details.outputs.changes_requested_reviews }}"
+
+          echo "Jira Username: $jiraUsername"
+          echo "Issue Key: $issueKey"
+          echo "Code Addition: $code_addition"
+          echo "Change Requests: $change_requests"
           
           # Update customfield_10050
           curl -X PUT \
