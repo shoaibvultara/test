@@ -27,17 +27,21 @@ jobs:
           echo "Querying GitHub GraphQL API for PR details..."
           RESPONSE=$(curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { additions } } }"}' \
+            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { additions changedFiles } } }"}' \
             https://api.github.com/graphql)
 
           echo "API Response:"
           echo "$RESPONSE"
 
+          # Extract additions and changedFiles
           code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
+          change_requests=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.changedFiles')
 
           echo "Number of additions in PR: $code_changes"
+          echo "Number of changed files in PR: $change_requests"
 
           echo "Code Changes: $code_changes"
+          echo "Change Requests: $change_requests"
           
       - name: Update JIRA Custom Fields
         run: |
