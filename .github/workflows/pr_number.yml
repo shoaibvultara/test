@@ -1,20 +1,12 @@
 name: Find Current Pull Request
 
 on:
-  push:
-    branches:
-      - '*'
+  pull_request:
+    types: [opened]
 
 jobs:
   find-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Find Current Pull Request
-        id: find_pr
-        uses: jwalton/gh-find-current-pr@v1.3.3
-
       - name: Print PR number
-        run: echo "Your PR is ${{ steps.find_pr.outputs.pr }}"
+        run: echo "Your PR is ${{ github.event.number }}"
