@@ -146,6 +146,10 @@ jobs:
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_changes="${{ env.code_changes }}"
           change_requests_reviews="${{ env.changes_requested_reviews }}"
+
+          # Convert strings to numbers if needed
+          code_addition_numeric=$(printf "%.0f" "$code_addition")
+          change_requests_reviews_numeric=$(printf "%.0f" "$change_requests_reviews")
           
           # Update customfield_10100
           curl -X PUT \
@@ -153,7 +157,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'"$code_addition"'"
+                  "customfield_10050": '"$code_addition_numeric"'
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
@@ -163,7 +167,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": "'"$change_requests_reviews"'"
+                  "customfield_10051": '"$change_requests_reviews_numeric"'
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
