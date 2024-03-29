@@ -157,7 +157,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": '"$code_addition_numeric"'
+                  "customfield_10050": "$code_addition_numeric"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
@@ -167,7 +167,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": '"$change_requests_reviews_numeric"'
+                  "customfield_10051": "$change_requests_reviews_numeric"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
