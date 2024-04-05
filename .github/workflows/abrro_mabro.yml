@@ -4,96 +4,12 @@ on:
     types: [submitted]
 
 jobs:
-  transition-review-blocked:
-    if: github.event.review.state == 'changes_requested'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Jira login
-        uses: atlassian/gajira-login@v3
-        env:
-            JIRA_BASE_URL: https://vultara.atlassian.net
-            JIRA_USER_EMAIL: muhammad.shoaib@vultara.com
-            JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-
-      - name: Get branch name
-        id: branch
-        run: |
-            BRANCH_NAME=$(jq --raw-output .pull_request.head.ref "$GITHUB_EVENT_PATH")
-            echo "::set-output name=branch::$BRANCH_NAME"
-      - name: Check if Jira issue exists
-        id: check-issue-exists
-        run: |
-            ISSUE_KEY=$(curl -s -X GET -H "Authorization: Basic $(echo -n $JIRA_USER_EMAIL:$JIRA_API_TOKEN | base64)" -H "Content-Type: application/json" "$JIRA_BASE_URL/rest/api/latest/issue/${BRANCH_NAME}?fields=id,status" | jq -r '.id, .fields.status.name')
-            if [ -z "$ISSUE_KEY" ]; then
-              echo "Jira issue does not exist for branch $BRANCH_NAME"
-              exit 1
-            fi
-            if [ "$ISSUE_KEY" != "In review" ]; then
-              echo "Jira issue is not in 'In review' status for branch $BRANCH_NAME"
-              exit 1
-            fi
-        continue-on-error: true
-
-      - name: Transition issue to Review Blocked
-        if: steps.check-issue-exists.outputs.issue-exists == 'true'
-        uses: atlassian/gajira-transition@v3
-        with:
-          issue: ${{ steps.branch.outputs.branch }}
-          transition: "Review Blocked"
- 
-  transition-in-review:
-    if: github.event.review.state == 'approved'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Jira login
-        uses: atlassian/gajira-login@v3
-        env:
-            JIRA_BASE_URL: https://vultara.atlassian.net
-            JIRA_USER_EMAIL: muhammad.shoaib@vultara.com
-            JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-
-      - name: Get branch name
-        id: branch
-        run: |
-            BRANCH_NAME=$(jq --raw-output .pull_request.head.ref "$GITHUB_EVENT_PATH")
-            echo "::set-output name=branch::$BRANCH_NAME"
-      - name: Check if Jira issue exists
-        id: check-issue-exists
-        run: |
-            ISSUE_KEY=$(curl -s -X GET -H "Authorization: Basic $(echo -n $JIRA_USER_EMAIL:$JIRA_API_TOKEN | base64)" -H "Content-Type: application/json" "$JIRA_BASE_URL/rest/api/latest/issue/${BRANCH_NAME}?fields=id,status" | jq -r '.id, .fields.status.name')
-            if [ -z "$ISSUE_KEY" ]; then
-              echo "Jira issue does not exist for branch $BRANCH_NAME"
-              exit 1
-            fi
-            if [ "$ISSUE_KEY" != "In review" ]; then
-              echo "Jira issue is not in 'In review' status for branch $BRANCH_NAME"
-              exit 1
-            fi
-            if [ "$ISSUE_KEY" != "Review Blocked" ]; then
-              echo "Jira issue is not in 'Review Blocked' status for branch $BRANCH_NAME"
-              exit 1
-            fi
-        continue-on-error: true
-
-      - name: Transition issue to In review
-        if: steps.check-issue-exists.outputs.issue-exists == 'true'
-        uses: atlassian/gajira-transition@v3
-        with:
-          issue: ${{ steps.branch.outputs.branch }}
-          transition: "In review"
-
   process-jira-event:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Find Current Pull Request
         id: find_pr
