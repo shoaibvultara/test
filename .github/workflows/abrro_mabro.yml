@@ -5,7 +5,7 @@ on:
 
 jobs:
   transition-review-blocked:
-    if: github.event.review.state == 'IN PROGRESS'
+    if: github.event.review.state == 'changes_requested'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,7 +42,7 @@ jobs:
         uses: atlassian/gajira-transition@v3
         with:
           issue: ${{ steps.branch.outputs.branch }}
-          transition: "Review Blocked"
+          transition: "DONE"
  
   transition-in-review:
     if: github.event.review.state == 'approved'
