@@ -5,7 +5,7 @@ on:
 
 jobs:
   transition-review-blocked:
-    if: github.event.review.state == 'QA'
+    if: github.event.review.state == 'IN PROGRESS'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
