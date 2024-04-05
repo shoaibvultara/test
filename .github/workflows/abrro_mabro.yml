@@ -4,86 +4,42 @@ on:
     types: [submitted]
 
 jobs:
-  process-jira-event:
+  transition-review-blocked:
+    if: github.event.review.state == 'changes_requested'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find Current Pull Request
-        id: find_pr
-        uses: jwalton/gh-find-current-pr@v1.3.3
+      - name: Jira login
+        uses: atlassian/gajira-login@v4
+        env:
+            JIRA_BASE_URL: https://gittest.atlassian.net
+            JIRA_USER_EMAIL: shoaib40ce@gmail.com
+            JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
 
-      - name: Print PR number
-        run: echo "PR_NUMBER=${{ steps.find_pr.outputs.pr }}" >> $GITHUB_ENV
-        
-      - name: Count Changes
-        id: get-details
+      - name: Get branch name
+        id: branch
         run: |
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          echo "Extracted PR number: $PR_NUMBER"
-          
-          if [ -z "$PR_NUMBER" ]; then
-            echo "PR_NUMBER not found. Skipping the remaining jobs."
-            exit 0
-          fi
-          # Get PR Additions using GraphQL
-          echo "Querying GitHub GraphQL API for PR details..."
-          RESPONSE=$(curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { additions changedFiles } } }"}' \
-            https://api.github.com/graphql)
-          echo "API Response:"
-          echo "$RESPONSE"
-          # Extract additions
-          code_changes=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.additions')
-          echo "Number of additions in PR: $code_changes"
-          echo "Code Changes: $code_changes"
-          echo "code_addition=$code_changes" >> $GITHUB_ENV
-          
-          # Get PR Change Requests using GraphQL
-          echo "Querying GitHub GraphQL API for PR details..."
-          RESPONSE=$(curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -d '{"query":"query { repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") { pullRequest(number: '$PR_NUMBER') { reviews(first:100) { nodes { state } } } } }"}' \
-            https://api.github.com/graphql)
-          echo "API Response:"
-          echo "$RESPONSE"
-          # Extract reviews and filter out CHANGES_REQUESTED state
-          changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
-          echo "Number of changes requested: $changes_requested_reviews"
-          echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
-          
-      - name: Update JIRA Custom Fields
+            BRANCH_NAME=$(jq --raw-output .pull_request.head.ref "$GITHUB_EVENT_PATH")
+            echo "::set-output name=branch::$BRANCH_NAME"
+      - name: Check if Jira issue exists
+        id: check-issue-exists
         run: |
-          jiraUsername="shoaib40ce@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          code_changes="${{ env.code_changes }}"
-          change_requests_reviews="${{ env.changes_requested_reviews }}"
+            ISSUE_KEY=$(curl -s -X GET -H "Authorization: Basic $(echo -n $JIRA_USER_EMAIL:$JIRA_API_TOKEN | base64)" -H "Content-Type: application/json" "$JIRA_BASE_URL/rest/api/latest/issue/${BRANCH_NAME}?fields=id,status" | jq -r '.id, .fields.status.name')
+            if [ -z "$ISSUE_KEY" ]; then
+              echo "Jira issue does not exist for branch $BRANCH_NAME"
+              exit 1
+            fi
+            if [ "$ISSUE_KEY" != "In review" ]; then
+              echo "Jira issue is not in 'In review' status for branch $BRANCH_NAME"
+              exit 1
+            fi
+        continue-on-error: true
 
-          # Convert strings to numbers if needed
-          code_addition_numeric=$(printf "%.0f" "$code_addition")
-          change_requests_reviews_numeric=$(printf "%.0f" "$change_requests_reviews")
-          
-          # Update customfield_10100
-          curl -X PUT \
-              -H "Content-Type: application/json" \
-              -u "$jiraUsername:$jiraToken" \
-              -d '{
-                "fields": {
-                  "customfield_10050": "'"$code_addition_numeric"'"
-                }
-              }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-          # Update customfield_10101
-          curl -X PUT \
-              -H "Content-Type: application/json" \
-              -u "$jiraUsername:$jiraToken" \
-              -d '{
-                "fields": {
-                  "customfield_10051": "'"$change_requests_reviews_numeric"'"
-                }
-              }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+      - name: Transition issue to Review Blocked
+        if: steps.check-issue-exists.outputs.issue-exists == 'true'
+        uses: atlassian/gajira-transition@v3
+        with:
+          issue: ${{ steps.branch.outputs.branch }}
+          transition: "Review Blocked"
