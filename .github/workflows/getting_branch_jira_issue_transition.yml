@@ -19,14 +19,26 @@ jobs:
           issueKey="${{ github.event.client_payload.issueKey }}"
           api_url="https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:${issueKey}"
           echo "API URL: $api_url"  # Add echo statement to display API URL
-          PR_NUMBER=$(curl -s -X GET \
-              -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" \
-              "$api_url" | jq -r 'if length > 0 then .[0].number else null end')
 
-          if [ -n "$PR_NUMBER" ]; then
-            echo "::set-output name=pr_number::$PR_NUMBER"
-            echo "Found PR: #$PR_NUMBER"  # Add echo statement to indicate PR was found
+          # Make API request and capture response
+          response=$(curl -s -X GET \
+              -H "Authorization: token ${{ secrets.TOKEN_GITHUB }}" \
+              "$api_url")
+
+          # Check if response is not empty
+          if [ -n "$response" ]; then
+            # Extract PR number using jq
+            PR_NUMBER=$(echo "$response" | jq -r '.[0].number')
+
+            # Check if PR_NUMBER is not null
+            if [ -n "$PR_NUMBER" ]; then
+              echo "::set-output name=pr_number::$PR_NUMBER"
+              echo "Found PR: #$PR_NUMBER"  # Add echo statement to indicate PR was found
+            else
+              echo "No PR found for issueKey: $issueKey"  # Add echo statement for no PR found
+              exit 1
+            fi
           else
-            echo "No PR found for issueKey: $issueKey"  # Add echo statement for no PR found
+            echo "API response is empty or invalid."
             exit 1
           fi
