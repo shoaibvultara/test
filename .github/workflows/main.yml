@@ -16,22 +16,15 @@ jobs:
       - name: List modified files
         id: list-files
         run: |
-          # Fetch the specific branch for comparison
-          git fetch origin ${github.event.client_payload.issueKey}
-          
-          # Determine the base commit for comparison (common ancestor of main and target branch)
-          base_commit=$(git merge-base origin/main origin/${{ github.event.client_payload.issueKey }})
-
-          # List all files changed between the base commit and the target branch
-          changed_files=$(git diff --name-only ${base_commit} origin/${{ github.event.client_payload.issueKey }})
-
-          # Filter changed files based on specific directories
-          changed_database_files=$(echo "${changed_files}" | grep '^server/database/')
-          changed_models_files=$(echo "${changed_files}" | grep -E '^server/models/|src/threatmodel/ItemDefinition.ts')
-
-          # Store changed file paths in environment variables
-          echo "CHANGED_DATABASE_FILES=${changed_database_files}" >> $GITHUB_ENV
-          echo "CHANGED_MODELS_FILES=${changed_models_files}" >> $GITHUB_ENV
+          issueKey=${{ github.event.client_payload.issueKey }}
+          git diff --name-only origin/main > changed_files.txt
+          if grep -q "$issueKey" changed_files.txt; then
+            echo "Changes found for $issueKey."
+            echo "::set-output name=changes-detected::true"
+          else
+            echo "No changes found for $issueKey."
+            echo "::set-output name=changes-detected::false"
+          fi
 
       - name: Update JIRA Custom Field
         if: (env.CHANGED_DATABASE_FILES != '' || env.CHANGED_MODELS_FILES != '') && env.TARGET_BRANCH == 'exists'
