@@ -25,7 +25,6 @@ jobs:
           fi
       - name: List modified files
         id: list-files
-        if: ${{ github.event.issue.pull_request }}  # Only run this step if the event is related to a pull request
         run: |
           git fetch origin
 
