@@ -57,20 +57,7 @@ jobs:
           echo "Number of changes requested: $changes_requested_reviews"
           echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
 
-      - name: Check if JIRA issue exists
-        id: check_issue
-        run: |
-          jiraUsername="soaib40ce@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          response=$(curl -s -o /dev/null -w "%{http_code}" -u "$jiraUsername:$jiraToken" "https://vultara.atlassian.net/rest/api/3/issue/${issueKey}")
-          if [ "$response" != "200" ]; then
-            echo "JIRA issue $issueKey not found."
-            exit 0
-          fi
-
       - name: Update JIRA Custom Fields
-        if: steps.check_issue.outputs.result == '200'
         run: |
           jiraUsername="shoaib40ce@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN }}"
