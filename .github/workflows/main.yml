@@ -31,14 +31,26 @@ jobs:
       - name: List modified files
         id: list-files
         run: |
-          git fetch origin
-          # Check for changes in the /server/database folder
-          git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/database/' > changed_database_files.txt
-          # Check for changes in /server/models folder or ItemDefinition.ts
-          git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/models/' 'src/threatmodel/ItemDefinition.ts' > changed_models_files.txt
-          # Store changed file paths in environment variables (using quotes to handle spaces)
-          echo "CHANGED_DATABASE_FILES=$(cat changed_database_files.txt)" >> $GITHUB_ENV
-          echo "CHANGED_MODELS_FILES=$(cat changed_models_files.txt)" >> $GITHUB_ENV
+          DIR_TO_CHECK=server/database
+          changed_files_database=$(git diff --name-only main..${{ github.event.client_payload.issueKey }} -- $DIR_TO_CHECK)
+          if [[ -n "$changed_files_database" ]]; then
+            echo "Changes detected in server/database directory:"
+            echo "$changed_files_database" > changed_database_files.txt
+            echo "List of changed files saved to changed_database_files.txt"
+          else
+            echo "No changes detected in server/database directory."
+          fi
+
+          DIR_TO_CHECK=server/models
+          changed_models_files=$(git diff --name-only main..${{ github.event.client_payload.issueKey }} -- $DIR_TO_CHECK)
+          if [[ -n "$changed_model_files" ]]; then
+            echo "Changes detected in server/database directory:"
+            echo "$changed_models_files" > changed_models_files.txt
+            echo "List of changed files saved to changed_database_files.txt"
+          else
+            echo "No changes detected in server/database directory."
+          fi
+      
 
       - name: Update JIRA Custom Field
         if: env.CHANGED_DATABASE_FILES != '' || env.CHANGED_MODELS_FILES != '' && env.TARGET_BRANCH == 'exists'
