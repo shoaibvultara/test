@@ -34,21 +34,13 @@ jobs:
           git fetch origin
           # Check for changes in the /server/database folder
           git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/database/*' > changed_database_files.txt
-          # Check for changes in /server/models folder or ItemDefinition.ts
-          git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/models/*' 'src/threatmodel/ItemDefinition.ts' > changed_models_files.txt
-
-      - name: Check for changes in database files
-        id: check-db-changes
-        run: |
           if test -s changed_database_files.txt; then
             echo "CHANGED_DATABASE_FILES=1" >> $GITHUB_ENV
           else
             echo "CHANGED_DATABASE_FILES=0" >> $GITHUB_ENV
           fi
-
-      - name: Check for changes in model files
-        id: check-models-changes
-        run: |
+          # Check for changes in /server/models folder or ItemDefinition.ts
+          git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/models/*' 'src/threatmodel/ItemDefinition.ts' > changed_models_files.txt
           if test -s changed_models_files.txt; then
             echo "CHANGED_MODELS_FILES=1" >> $GITHUB_ENV
           else
@@ -61,12 +53,12 @@ jobs:
           # Extract issueKey from the payload
           issueKey=${{ github.event.client_payload.issueKey }}
           # Your JIRA API URL
-          jiraUrl="https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+          jiraUrl="https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}"
           # Your JIRA Custom Field IDs
-          customFieldIdAPI="customfield_10044"
+          customFieldIdAPI="customfield_10040"
           customFieldIdSchema="customfield_10045"
           # JIRA username (email)
-          jiraUsername="shoaib40ce@gmail.com"
+          jiraUsername="muhammadshoaibajk@gmail.com"
           # JIRA API token or password
           jiraToken=${{ secrets.JIRA_API_TOKEN }}
 
@@ -77,7 +69,7 @@ jobs:
               -u "${jiraUsername}:${jiraToken}" \
               -d '{
                 "fields": {
-                  "customfield_10044": "TRUE"
+                  "customfield_10040": "TRUE"
                 }
               }' \
               "${jiraUrl}"
