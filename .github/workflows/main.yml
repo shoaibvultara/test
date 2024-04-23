@@ -13,22 +13,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Debug - List branches
+        run: |
+          git remote -v  # Print repository remotes for debugging
+          git fetch --all --prune
+          git branch -a  # List all branches after fetch
+        continue-on-error: true  # Continue even if this step fails
+
       - name: List modified files
         id: list-files
         run: |
-          # Fetch all branches to ensure we have the latest data
-          git fetch --all --prune
-
           # Determine the base commit for comparison (common ancestor of main and target branch)
           base_commit=$(git merge-base origin/main origin/${{ github.event.client_payload.issueKey }})
-
           # List all files changed between the base commit and the target branch
           changed_files=$(git diff --name-only ${base_commit} origin/${{ github.event.client_payload.issueKey }})
-
           # Filter changed files based on specific directories
           changed_database_files=$(echo "${changed_files}" | grep '^server/database/')
           changed_models_files=$(echo "${changed_files}" | grep -E '^server/models/|src/threatmodel/ItemDefinition.ts')
-
           # Store changed file paths in environment variables
           echo "CHANGED_DATABASE_FILES=${changed_database_files}" >> $GITHUB_ENV
           echo "CHANGED_MODELS_FILES=${changed_models_files}" >> $GITHUB_ENV
@@ -38,20 +39,15 @@ jobs:
         run: |
           # Extract issueKey from the payload
           issueKey=${{ github.event.client_payload.issueKey }}
-
           # Your JIRA API URL
           jiraUrl="https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-
           # Your JIRA Custom Field IDs
           customFieldIdAPI="customfield_10044"
           customFieldIdSchema="customfield_10045"
-
           # JIRA username (email)
           jiraUsername="shoaib40ce@gmail.com"
-
           # JIRA API token or password (stored as GitHub Secret)
           jiraToken=${{ secrets.JIRA_API_TOKEN }}
-
           # Check if there are changes in /server/database
           if [[ -n "${CHANGED_DATABASE_FILES}" ]]; then
             # Update custom field for API change
@@ -65,7 +61,6 @@ jobs:
               }' \
               "${jiraUrl}"
           fi
-
           # Check if there are changes in /server/models or ItemDefinition.ts
           if [[ -n "${CHANGED_MODELS_FILES}" ]]; then
             # Update custom field for schema change
