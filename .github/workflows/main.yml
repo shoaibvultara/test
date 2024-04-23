@@ -25,13 +25,17 @@ jobs:
           fi
       - name: List modified files
         id: list-files
-        if: env.TARGET_BRANCH == 'exists'
+        if: ${{ github.event.issue.pull_request }}  # Only run this step if the event is related to a pull request
         run: |
           git fetch origin
+
           # Check for changes in the /server/database folder
           git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/database/*' > changed_database_files.txt
+
           # Check for changes in /server/models folder or ItemDefinition.ts
           git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/models/*' 'src/threatmodel/ItemDefinition.ts' > changed_models_files.txt
+
+          # Store changed file paths in environment variables
           echo "CHANGED_DATABASE_FILES=$(cat changed_database_files.txt)" >> $GITHUB_ENV
           echo "CHANGED_MODELS_FILES=$(cat changed_models_files.txt)" >> $GITHUB_ENV
       - name: Update JIRA Custom Field
