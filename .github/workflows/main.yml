@@ -1,14 +1,18 @@
 name: Change Detection
+
 on:
   repository_dispatch:
     types:
       - jira_issue_transition
+
 jobs:
   process-jira-event:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
       - name: List Branches and Set Outputs
         id: list-branches
         run: |
@@ -23,6 +27,7 @@ jobs:
             echo "TARGET_BRANCH=not_exists" >> $GITHUB_ENV
             exit 0
           fi
+
       - name: List modified files
         id: list-files
         run: |
@@ -31,43 +36,61 @@ jobs:
           git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/database/*' > changed_database_files.txt
           # Check for changes in /server/models folder or ItemDefinition.ts
           git diff --name-only origin/main origin/${{ github.event.client_payload.issueKey }} -- 'server/models/*' 'src/threatmodel/ItemDefinition.ts' > changed_models_files.txt
-          
-      - name: Update JIRA Custom Field
-        if: (env.CHANGED_DATABASE_FILES != '' || env.CHANGED_MODELS_FILES != '') && env.TARGET_BRANCH == 'exists'
+
+      - name: Check for changes in database files
+        id: check-db-changes
+        run: |
+          if test -s changed_database_files.txt; then
+            echo "CHANGED_DATABASE_FILES=1" >> $GITHUB_ENV
+          else
+            echo "CHANGED_DATABASE_FILES=0" >> $GITHUB_ENV
+          fi
+
+      - name: Check for changes in model files
+        id: check-models-changes
+        run: |
+          if test -s changed_models_files.txt; then
+            echo "CHANGED_MODELS_FILES=1" >> $GITHUB_ENV
+          else
+            echo "CHANGED_MODELS_FILES=0" >> $GITHUB_ENV
+          fi
+
+      - name: Update JIRA Custom Fields
+        if: (env.CHANGED_DATABASE_FILES == '1' || env.CHANGED_MODELS_FILES == '1') && env.TARGET_BRANCH == 'exists'
         run: |
           # Extract issueKey from the payload
           issueKey=${{ github.event.client_payload.issueKey }}
           # Your JIRA API URL
           jiraUrl="https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
-          # Your JIRA Custom Field ID
+          # Your JIRA Custom Field IDs
           customFieldIdAPI="customfield_10044"
           customFieldIdSchema="customfield_10045"
           # JIRA username (email)
           jiraUsername="shoaib40ce@gmail.com"
           # JIRA API token or password
           jiraToken=${{ secrets.JIRA_API_TOKEN }}
-          # Check if there are changes in /server/database
-          if cat changed_database_files.txt | grep -qE 'server/database/'; then
-            # Update custom field for API change
+
+          # Update custom field for API change
+          if [ "${{ env.CHANGED_DATABASE_FILES }}" == "1" ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "${jiraUsername}:${jiraToken}" \
               -d '{
                 "fields": {
-                  "customfield_10044": "TRUE"
+                  "${customFieldIdAPI}": "TRUE"
                 }
               }' \
               "${jiraUrl}"
           fi
-          # Check if there are changes in /server/models or ItemDefinition.ts
-          if cat changed_models_files.txt | grep -qE 'server/models/|src/threatmodel/ItemDefinition.ts'; then
-            # Update custom field for schema change
+
+          # Update custom field for schema change
+          if [ "${{ env.CHANGED_MODELS_FILES }}" == "1" ]; then
             curl -X PUT \
               -H "Content-Type: application/json" \
               -u "${jiraUsername}:${jiraToken}" \
               -d '{
                 "fields": {
-                  "customfield_10045": "TRUE"
+                  "${customFieldIdSchema}": "TRUE"
                 }
               }' \
               "${jiraUrl}"
