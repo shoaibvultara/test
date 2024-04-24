@@ -7,6 +7,7 @@ on:
 
 jobs:
   process-jira-event:
+    environment: JIRA_API_ENVIRONMENT
     runs-on: ubuntu-latest
 
     steps:
