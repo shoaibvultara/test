@@ -60,7 +60,7 @@ jobs:
           # JIRA username (email)
           jiraUsername="muhammadshoaibajk@gmail.com"
           # JIRA API token or password
-          jiraToken=${{ secrets.JIRA_API_TOKEN }}
+          jiraToken=${{ secrets.JIRA_API_TOKEN_ENVIRONMENT }}
 
           # Update custom field for API change
           if [ "${{ env.CHANGED_DATABASE_FILES }}" == "1" ]; then
