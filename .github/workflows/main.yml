@@ -46,8 +46,6 @@ jobs:
             echo "CHANGED_MODELS_FILES=0" >> $GITHUB_ENV
           fi
       - name: Update JIRA Custom Fields
-        env:
-          API_KEY: ${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}
         if: (env.CHANGED_DATABASE_FILES == '1' || env.CHANGED_MODELS_FILES == '1') && env.TARGET_BRANCH == 'exists'
         run: |
           # Extract issueKey from the payload
@@ -60,7 +58,7 @@ jobs:
           # JIRA username (email)
           jiraUsername="muhammadshoaibajk@gmail.com"
           # JIRA API token or password
-          jiraToken=$API_KEY
+          jiraToken=${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}
           # Update custom field for API change
           if [ "${{ env.CHANGED_DATABASE_FILES }}" == "1" ]; then
             curl -X PUT \
