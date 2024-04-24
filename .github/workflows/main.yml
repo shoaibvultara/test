@@ -7,7 +7,6 @@ on:
 
 jobs:
   process-jira-event:
-    environment: JIRA_API_ENVIRONMENT
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +58,7 @@ jobs:
           # JIRA username (email)
           jiraUsername="muhammadshoaibajk@gmail.com"
           # JIRA API token or password
-          jiraToken=${{ secrets.JIRA_API_TOKEN_ENVIRONMENT }}
+          jiraToken=${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}
           # Update custom field for API change
           if [ "${{ env.CHANGED_DATABASE_FILES }}" == "1" ]; then
             curl -X PUT \
