@@ -8,8 +8,6 @@ on:
 jobs:
   process-jira-event:
     runs-on: ubuntu-latest
-    env:
-      ENV_SECRET: ${{ secrets.JIRA_API_TOKEN_ENVIRONMENT }}
 
     steps:
       - name: Check out code
@@ -29,7 +27,6 @@ jobs:
             echo "TARGET_BRANCH=not_exists" >> $GITHUB_ENV
             exit 0
           fi
-
       - name: List modified files
         id: list-files
         run: |
@@ -48,7 +45,6 @@ jobs:
           else
             echo "CHANGED_MODELS_FILES=0" >> $GITHUB_ENV
           fi
-
       - name: Update JIRA Custom Fields
         if: (env.CHANGED_DATABASE_FILES == '1' || env.CHANGED_MODELS_FILES == '1') && env.TARGET_BRANCH == 'exists'
         run: |
@@ -62,8 +58,7 @@ jobs:
           # JIRA username (email)
           jiraUsername="muhammadshoaibajk@gmail.com"
           # JIRA API token or password
-          jiraToken=$ENV_SECRET
-
+          jiraToken=${{ secrets.JIRA_API_TOKEN_ENVIRONMENT }}
           # Update custom field for API change
           if [ "${{ env.CHANGED_DATABASE_FILES }}" == "1" ]; then
             curl -X PUT \
@@ -76,7 +71,6 @@ jobs:
               }' \
               "${jiraUrl}"
           fi
-
           # Update custom field for schema change
           if [ "${{ env.CHANGED_MODELS_FILES }}" == "1" ]; then
             curl -X PUT \
