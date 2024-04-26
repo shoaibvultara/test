@@ -60,7 +60,7 @@ jobs:
           echo "existing_changes=$custom_field_value" >> $GITHUB_ENV
           echo "Total Changes= $((code_addition + custom_field_value))"
           Total Changes= $((code_addition + custom_field_value))
-          echo total_changes= $((code_addition + custom_field_value)) >> $GITHUB_ENV
+          echo "total_changes= $((code_addition + custom_field_value))" >> $GITHUB_ENV
           
       - name: Update JIRA Custom Fields
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
