@@ -60,10 +60,10 @@ jobs:
       - name: Check if JIRA issue exists
         id: check_issue
         run: |
-          jiraUsername="soaib40ce@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
+          jiraUsername="muhammadshoaibajk@gmail.com"
+          jiraToken="${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
-          response=$(curl -s -o /dev/null -w "%{http_code}" -u "$jiraUsername:$jiraToken" "https://vultara.atlassian.net/rest/api/3/issue/${issueKey}")
+          response=$(curl -s -o /dev/null -w "%{http_code}" -u "$jiraUsername:$jiraToken" "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}")
           if [ "$response" != "200" ]; then
             echo "JIRA issue $issueKey not found."
             exit 0
@@ -72,8 +72,8 @@ jobs:
       - name: Update JIRA Custom Fields
         if: steps.check_issue.outputs.result == '200'
         run: |
-          jiraUsername="shoaib40ce@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
+          jiraUsername="muhammadshoaibajk@gmail.com"
+          jiraToken="${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_changes="${{ env.code_changes }}"
           change_requests_reviews="${{ env.changes_requested_reviews }}"
@@ -85,17 +85,17 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'"$code_addition"'"
+                  "customfield_10042": "'"$code_addition"'"
                 }
               }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+              "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}"
           # Update customfield_10104
           curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10051": "'"$change_requests_reviews"'"
+                  "customfield_10043": "'"$change_requests_reviews"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
