@@ -43,7 +43,6 @@ jobs:
           echo "Number of additions in PR: $code_changes"
           echo "Code Changes: $code_changes"
           echo "code_addition=$code_changes" >> $GITHUB_ENV
-
           # Get PR Change Requests using GraphQL
           echo "Querying GitHub GraphQL API for PR details..."
           RESPONSE=$(curl -X POST \
@@ -56,21 +55,7 @@ jobs:
           changes_requested_reviews=$(echo "$RESPONSE" | jq -r '.data.repository.pullRequest.reviews.nodes | map(select(.state == "CHANGES_REQUESTED")) | length')
           echo "Number of changes requested: $changes_requested_reviews"
           echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
-
-      - name: Check if JIRA issue exists
-        id: check_issue
-        run: |
-          jiraUsername="muhammadshoaibajk@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}"
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          response=$(curl -s -o /dev/null -w "%{http_code}" -u "$jiraUsername:$jiraToken" "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}")
-          if [ "$response" != "200" ]; then
-            echo "JIRA issue $issueKey not found."
-            exit 0
-          fi
-
       - name: Update JIRA Custom Fields
-        if: steps.check_issue.outputs.result == '200'
         run: |
           jiraUsername="muhammadshoaibajk@gmail.com"
           jiraToken="${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}"
@@ -79,7 +64,7 @@ jobs:
           change_requests_reviews="${{ env.changes_requested_reviews }}"
           code_addition_numeric=$(printf "%.0f" "$code_addition")
           change_request_reviews_numeric=$(printf "%.0f" "$change_requests_reviews")
-          # Update customfield_10103
+          # Update customfield_10100
           curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
@@ -89,7 +74,7 @@ jobs:
                 }
               }' \
               "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}"
-          # Update customfield_10104
+          # Update customfield_10101
           curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
@@ -98,4 +83,4 @@ jobs:
                   "customfield_10043": "'"$change_requests_reviews"'"
                 }
               }' \
-              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+              "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}"
