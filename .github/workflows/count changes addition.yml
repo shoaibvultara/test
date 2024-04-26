@@ -57,30 +57,30 @@ jobs:
           echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
       - name: Update JIRA Custom Fields
         run: |
-          jiraUsername="muhammadshoaibajk@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN_ORGANIZATION }}"
+          jiraUsername="shoaib40ce@gmail.com"
+          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_changes="${{ env.code_changes }}"
           change_requests_reviews="${{ env.changes_requested_reviews }}"
           code_addition_numeric=$(printf "%.0f" "$code_addition")
           change_request_reviews_numeric=$(printf "%.0f" "$change_requests_reviews")
-          # Update customfield_10100
+          # Update customfield_10103
           curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10042": "'"$code_addition"'"
+                  "customfield_10050": "'"$code_addition"'"
                 }
               }' \
-              "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}"
-          # Update customfield_10101
+              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
+          # Update customfield_10104
           curl -X PUT \
               -H "Content-Type: application/json" \
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10043": "'"$change_requests_reviews"'"
+                  "customfield_10051": "'"$change_requests_reviews"'"
                 }
               }' \
-              "https://testjiragitautomation.atlassian.net/rest/api/3/issue/${issueKey}"
+              "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
