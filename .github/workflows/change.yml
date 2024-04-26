@@ -59,16 +59,17 @@ jobs:
           echo "Existing changes: $custom_field_value"
           echo "existing_changes=$custom_field_value" >> $GITHUB_ENV
           
+      - name: Count Total Changes
+        #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
+        run: |
+          echo "Code Changes: $code_changes"
+          echo "Existing changes: $custom_field_value"
+          total_changes=$((code_changes + existing_changes)) >> $GITHUB_ENV
+          echo "total changes: $total_changes"
+      
       - name: Update JIRA Custom Fields
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
         run: |
-          jiraUsername="shoaib40ce@gmail.com"
-          jiraToken="${{ secrets.JIRA_API_TOKEN }}"
-          issueKey="${{ github.event.pull_request.head.ref }}"
-          code_changes="${{ env.code_changes }}"
-          change_requests_reviews="${{ env.changes_requested_reviews }}"
-          total_changes=$((code_changes + existing_changes))
-          
           # Update customfield_10050
           curl -X PUT \
               -H "Content-Type: application/json" \
