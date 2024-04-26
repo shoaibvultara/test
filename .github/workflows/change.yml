@@ -50,6 +50,14 @@ jobs:
           echo "Number of changes requested: $changes_requested_reviews"
           echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
           
+      - name: Fetch Custom Field Value
+        id: fetch-custom-field
+        run: |
+          # Make HTTP request to Jira API to fetch custom field value
+          # Replace `<JIRA_API_URL>`, `<JIRA_USERNAME>`, `<JIRA_PASSWORD>` with actual values
+          custom_field_value=$(curl -s -X GET -u shoaib40ce@gmail.com:${{ secrets.JIRA_API_TOKEN }} "https://gittest.atlassian.net/rest/api/latest/issue/${{ github.event.pull_request.head.ref }}?fields=customfield_10050" | jq -r '.fields.customfield_10050')
+          echo "Existing changes: $custom_field_value"
+          echo "existing_changes=$custom_field_value" >> $GITHUB_ENV
           
       - name: Update JIRA Custom Fields
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
@@ -66,7 +74,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                  "customfield_10050": "'"$code_addition"'"
+                 "customfield_10050": "'"$code_changes+$existing_changes"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
