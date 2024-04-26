@@ -67,6 +67,7 @@ jobs:
           issueKey="${{ github.event.pull_request.head.ref }}"
           code_changes="${{ env.code_changes }}"
           change_requests_reviews="${{ env.changes_requested_reviews }}"
+          total_changes=$((code_changes + existing_changes))
           
           # Update customfield_10050
           curl -X PUT \
@@ -74,7 +75,7 @@ jobs:
               -u "$jiraUsername:$jiraToken" \
               -d '{
                 "fields": {
-                 "customfield_10050": "'"$code_changes+$existing_changes"'"
+                 "customfield_10050": "'"$total_changes"'"
                 }
               }' \
               "https://gittest.atlassian.net/rest/api/3/issue/${issueKey}"
