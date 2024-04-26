@@ -50,6 +50,10 @@ jobs:
           echo "Number of changes requested: $changes_requested_reviews"
           echo "changes_requested_reviews=$changes_requested_reviews" >> $GITHUB_ENV
           
+      - name: count total changes
+        #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
+        run: |
+          echo "Code Changes: $code_addition"
           
       - name: Update JIRA Custom Fields
         #if: steps.get-details.outputs.code_changes > 0 || steps.get-details.outputs.changes_requested_reviews > 0
